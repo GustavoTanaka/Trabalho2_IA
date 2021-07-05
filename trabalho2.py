@@ -31,22 +31,22 @@ def __get_path(pai, final):
     return caminho
 
 # Funcao recursiva estoura pilha para nVertices muito grande
-def __depthSearch(grafo, atual, final, caminho):
-    if not caminho or atual not in caminho: # if vertice atual not in caminho salvo
-        caminho.append(atual)
-        if atual == final: 
-            return caminho
+# def __depthSearch(grafo, atual, final, caminho):
+#     if not caminho or atual not in caminho: # if vertice atual not in caminho salvo
+#         caminho.append(atual)
+#         if atual == final: 
+#             return caminho
         
-        i = 0
-        proxVertice = get_next_in_row(grafo, atual, i)
-        i += 1
-        # itera sobre todos os elementos da linha
-        while proxVertice >= 0:
-            result = __depthSearch(grafo, proxVertice, final, caminho) # chama funcao recursiva
-            if result:
-                return result
-            proxVertice = get_next_in_row(grafo, atual, i)
-            i += 1
+#         i = 0
+#         proxVertice = get_next_in_row(grafo, atual, i)
+#         i += 1
+#         # itera sobre todos os elementos da linha
+#         while proxVertice >= 0:
+#             result = __depthSearch(grafo, proxVertice, final, caminho) # chama funcao recursiva
+#             if result:
+#                 return result
+#             proxVertice = get_next_in_row(grafo, atual, i)
+#             i += 1
 
 def depthSearch(grafo, inicial, final):
     # return __depthSearch(grafo, inicial, final, [])
@@ -176,8 +176,6 @@ def aStar(vertices, grafo, inicial, final):
                 }
                 # insere o elemento ordenado a partif do f = g + h
                 pos = __get_pos_to_insert(fila, vDict)
-                # while pos < len(fila) and (vDict['g'] + vDict['h']) > (fila[pos]['g'] + fila[pos]['h']):
-                #     pos += 1
                 fila.insert(pos, vDict)
             proxVertice = get_next_in_row(grafo, atual['vertice'], i)
             i += 1
