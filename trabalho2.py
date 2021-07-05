@@ -4,6 +4,11 @@ from sklearn.neighbors import kneighbors_graph
 from scipy import sparse
 from math import dist
 
+# Will mexeu aqui
+import networkx as nx
+from pyvis.network import Network
+import matplotlib.pyplot as plt
+
 def undirect_graph(grafo):
     for i in range(len(grafo)-1):
         for j in range(i+1, len(grafo)):
@@ -196,6 +201,13 @@ def main():
         while len(vertices) < nVertices:
             vertices.append((randint(1,nVertices), randint(1,nVertices)))
     
+    # Impressao do grafo
+    G = nx.Graph()
+    G.add_edges_from(vertices)
+    net = Network(notebook=True)
+    net.from_nx(G)
+    net.show("grafo.html")
+
     grafo_knn = kneighbors_graph(vertices, K).toarray() # forma o grafo direcionado a partir do algoritmo KNN
     grafo_knn = undirect_graph(grafo_knn) # transforma em um grafo nao direcionado
     grafo_knn = sparse.csr_matrix(grafo_knn) # salva o grafo como matriz esparsa
