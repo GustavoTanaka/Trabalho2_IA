@@ -21,6 +21,16 @@ def get_next_in_row(matrix, row, flag):
         
     return matrix.indices[index]
 
+def __get_path(pai, final):
+    caminho = [final]
+    vertice = final
+    while vertice in pai:
+        caminho.insert(0, pai[vertice])
+        vertice = pai[vertice]
+    
+    return caminho
+
+# Funcao recursiva estoura pilha para nVertices muito grande
 def __depthSearch(grafo, atual, final, caminho):
     if not caminho or atual not in caminho: # if vertice atual not in caminho salvo
         caminho.append(atual)
@@ -39,16 +49,28 @@ def __depthSearch(grafo, atual, final, caminho):
             i += 1
 
 def depthSearch(grafo, inicial, final):
-    return __depthSearch(grafo, inicial, final, [])
+    # return __depthSearch(grafo, inicial, final, [])
 
-def __get_path(pai, final):
-    caminho = [final]
-    vertice = final
-    while vertice in pai:
-        caminho.insert(0, pai[vertice])
-        vertice = pai[vertice]
-    
-    return caminho
+    pilha = [inicial]
+    visitados = [inicial]
+    pai = {}
+
+    while pilha:
+        vertice = pilha.pop()
+        if vertice == final:
+            return __get_path(pai, final)
+        
+        i = 0
+        proxVertice = get_next_in_row(grafo, vertice, i)
+        i += 1
+        # itera sobre todos os elementos da linha
+        while proxVertice >= 0:
+            if proxVertice not in visitados:
+                pilha.append(proxVertice)
+                visitados.append(proxVertice)
+                pai[proxVertice] = vertice # salva o no pai pelo qual foi acessado
+            proxVertice = get_next_in_row(grafo, vertice, i)
+            i += 1
 
 def breadthSearch(grafo, inicial, final):
     visitados = [inicial]
@@ -106,6 +128,24 @@ def bestFirst(vertices, grafo, inicial, final):
             proxVertice = get_next_in_row(grafo, vertice, i)
             i += 1
 
+def __get_pos_to_insert(fila, elem):
+    start = 0
+    end = len(fila) - 1
+    pivot = (int) ((start + end) / 2)
+    elemF = elem['g'] + elem['h']
+
+    while start <= end:
+        pivotF = fila[pivot]['g'] + fila[pivot]['h']
+        if elemF < pivotF:
+            end = pivot - 1
+        elif elemF > pivotF:
+            start = pivot + 1
+        else:
+            return pivot
+        pivot = (int) ((start + end) / 2)
+
+    return start
+
 def aStar(vertices, grafo, inicial, final):
     h = __distance_to_final(vertices, final) # calcula a distancia euclidiana dos pontos ate o final
     fila = [{
@@ -114,9 +154,11 @@ def aStar(vertices, grafo, inicial, final):
         'h': h[inicial],
         'caminho': [inicial]
     }]
+    visitados = []
 
     while fila:
         atual = fila.pop(0)
+        visitados.append(atual['vertice'])
         if atual['vertice'] == final:
             return atual['caminho']
         
@@ -125,17 +167,17 @@ def aStar(vertices, grafo, inicial, final):
         i += 1
         # itera sobre todos os elementos da linha
         while proxVertice >= 0:
-            if proxVertice not in atual['caminho']:
+            if proxVertice not in visitados:
                 vDict = {
                     'vertice': proxVertice,
                     'g': atual['g'] + dist(vertices[ atual['vertice'] ], vertices[proxVertice]),
                     'h': h[proxVertice],
                     'caminho': atual['caminho'] + [proxVertice]
                 }
-                pos = 0
                 # insere o elemento ordenado a partif do f = g + h
-                while pos < len(fila) and (vDict['g'] + vDict['h']) > (fila[pos]['g'] + fila[pos]['h']):
-                    pos += 1
+                pos = __get_pos_to_insert(fila, vDict)
+                # while pos < len(fila) and (vDict['g'] + vDict['h']) > (fila[pos]['g'] + fila[pos]['h']):
+                #     pos += 1
                 fila.insert(pos, vDict)
             proxVertice = get_next_in_row(grafo, atual['vertice'], i)
             i += 1
@@ -155,12 +197,10 @@ def main():
             break
         while len(vertices) < nVertices:
             vertices.append((randint(1,nVertices), randint(1,nVertices)))
-    print(vertices)
     
     grafo_knn = kneighbors_graph(vertices, K).toarray() # forma o grafo direcionado a partir do algoritmo KNN
     grafo_knn = undirect_graph(grafo_knn) # transforma em um grafo nao direcionado
     grafo_knn = sparse.csr_matrix(grafo_knn) # salva o grafo como matriz esparsa
-    print(grafo_knn.toarray())
 
     # seleciona vertices iniciais 
     vInicial = randint(0, nVertices-1)
@@ -172,41 +212,52 @@ def main():
     print('Vertice Final: ', vertices[vFinal])
 
     # Busca em Profundidade
+    tInicio = time.time()
     result = depthSearch(grafo_knn, vInicial, vFinal)
+    tFim = time.time()
     if result is not None:
         print('\nBusca em Profundidade:')
         print('Caminho:')
         for i in result:
             print('\t', vertices[i])
+        print('Tempo: ', tFim - tInicio)
     else: # encerra o programa caso nao haja solucao
         print('Não há solução para a situação proposta')
         return
 
     # Busca em Largura
     print('\nBusca em Largura:')
+    tInicio = time.time()
     result = breadthSearch(grafo_knn, vInicial, vFinal)
+    tFim = time.time()
     print('Caminho:')
     for i in result:
         print('\t', vertices[i])
+    print('Tempo: ', tFim - tInicio)
 
     # Greedy Best-First
     print('\nBest-First:')
+    tInicio = time.time()
     result = bestFirst(vertices, grafo_knn, vInicial, vFinal)
+    tFim = time.time()
     print('Caminho:')
     for i in result:
         print('\t', vertices[i])
+    print('Tempo: ', tFim - tInicio)
 
     # A-Estrela (A*)
     print('\nA-Estrela:')
+    tInicio = time.time()
     result = aStar(vertices, grafo_knn, vInicial, vFinal)
+    tFim = time.time()
     print('Caminho:')
     for i in result:
         print('\t', vertices[i])
+    print('Tempo: ', tFim - tInicio)
 
 if __name__ == '__main__':
     main()
 
 # TO DO
-    # CALCULAR E IMPRIMIR OS TEMPOS
     # VISUALIZAR OS CAMINHOS OBTIDOS
     # ATUALIZAR README COM AS LIBS QUE PRECISAM SER INSTALADAS
