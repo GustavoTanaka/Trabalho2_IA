@@ -68,7 +68,7 @@ def breadthSearch(grafo, inicial, final):
             if proxVertice not in visitados:
                 fila.append(proxVertice)
                 visitados.append(proxVertice)
-                pai[proxVertice] = vertice
+                pai[proxVertice] = vertice # salva o no pai pelo qual foi acessado
             proxVertice = get_next_in_row(grafo, vertice, i)
             i += 1
         
@@ -78,6 +78,33 @@ def __distance_to_final(vertices, final):
         distancia.append(dist((x,y), vertices[final]))
 
     return distancia
+
+def bestFirst(vertices, grafo, inicial, final):
+    h = __distance_to_final(vertices, final) # calcula a distancia euclidiana dos pontos ate o final
+    visitados = [inicial]
+    fila = [inicial]
+    pai = {}
+
+    while fila:
+        vertice = fila.pop(0)
+        if vertice == final:
+            return __get_path(pai, final)
+        
+        i = 0
+        proxVertice = get_next_in_row(grafo, vertice, i)
+        i += 1
+        # itera sobre todos os elementos da linha
+        while proxVertice >= 0:
+            if proxVertice not in visitados:
+                pos = 0
+                # insere o elemento ordenado a partif do f = h
+                while pos < len(fila) and h[proxVertice] > h[fila[pos]]:
+                    pos += 1
+                fila.insert(pos, proxVertice)
+                visitados.append(proxVertice)
+                pai[proxVertice] = vertice # salva o no pai pelo qual foi acessado
+            proxVertice = get_next_in_row(grafo, vertice, i)
+            i += 1
 
 def aStar(vertices, grafo, inicial, final):
     h = __distance_to_final(vertices, final) # calcula a distancia euclidiana dos pontos ate o final
@@ -145,34 +172,41 @@ def main():
     print('Vertice Final: ', vertices[vFinal])
 
     # Busca em Profundidade
-    print('\nBusca em Profundidade:')
     result = depthSearch(grafo_knn, vInicial, vFinal)
     if result is not None:
+        print('\nBusca em Profundidade:')
         print('Caminho:')
         for i in result:
             print('\t', vertices[i])
-    else:
+    else: # encerra o programa caso nao haja solucao
         print('Não há solução para a situação proposta')
+        return
 
     # Busca em Largura
     print('\nBusca em Largura:')
     result = breadthSearch(grafo_knn, vInicial, vFinal)
-    if result is not None:
-        print('Caminho:')
-        for i in result:
-            print('\t', vertices[i])
-    else:
-        print('Não há solução para a situação proposta')
+    print('Caminho:')
+    for i in result:
+        print('\t', vertices[i])
+
+    # Greedy Best-First
+    print('\nBest-First:')
+    result = bestFirst(vertices, grafo_knn, vInicial, vFinal)
+    print('Caminho:')
+    for i in result:
+        print('\t', vertices[i])
 
     # A-Estrela (A*)
     print('\nA-Estrela:')
     result = aStar(vertices, grafo_knn, vInicial, vFinal)
-    if result is not None:
-        print('Caminho:')
-        for i in result:
-            print('\t', vertices[i])
-    else:
-        print('Não há solução para a situação proposta')
+    print('Caminho:')
+    for i in result:
+        print('\t', vertices[i])
 
 if __name__ == '__main__':
     main()
+
+# TO DO
+    # CALCULAR E IMPRIMIR OS TEMPOS
+    # VISUALIZAR OS CAMINHOS OBTIDOS
+    # ATUALIZAR README COM AS LIBS QUE PRECISAM SER INSTALADAS
